@@ -1,0 +1,283 @@
+---
+title: "CMPUT 664 - Project"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("dplyr")
+library("tidyr")
+library("ggplot2")
+library("readr")
+library("reshape2")
+library("philentropy")
+```
+
+```{r data_setup, echo=FALSE, results="hide", include=FALSE}
+data = read_csv("./dataframe.csv")
+
+used_languages = c('Russian', 'Spanish', 'French', 'Turkish', 'German', 'Japanese', 'Polish', 'Italian', 'Catalan', 'Korean', 'Chinese', 'Portuguese', 'Greek', 'Thai', 'Swedish')
+
+data <- data %>%
+  filter(language %in% used_languages)
+
+data <- data[!duplicated(data[,c("head","error_type")]),]
+
+learners <- data %>%
+  group_by(language, head) %>%
+  summarize(count=n()) %>%
+  group_by(language) %>%
+  count()
+```
+
+# Grouping error types
+
+```{r error_groups}
+errors_frequency <-
+  data %>%
+    count(error_type)
+
+errors_frequency <- errors_frequency %>%
+  mutate(freq = n / sum(n))
+```
+
+# Plotting top 5 error types
+
+```{r error_groups_frequency}
+errors_frequency <- errors_frequency[order(errors_frequency$freq), ]
+errors_frequency$error_type <- factor(errors_frequency$error_type, levels = errors_frequency$error_type[order(-errors_frequency$freq)])
+errors_frequency %>%
+    top_n(5, freq) %>%
+    ggplot(aes(x = error_type, y = freq)) + 
+    ggtitle("Error types distribution") +
+    labs(x="Error type", y="Frequency") +
+    geom_bar(stat = "identity", width = 0.35) +
+    theme(axis.text.x = element_text())
+```
+
+# Plotting error types distribution by language
+
+```{r error_groups_frequency_by_language}
+errors_by_language <-
+  data %>%
+    group_by(language) %>%
+    count(error_type)
+
+errors_by_language <- errors_by_language %>%
+  group_by(language) %>%
+  mutate(freq = n / sum(n))
+
+errors_by_language[which(errors_by_language$freq>0.025),] %>%
+    ggplot(aes(x = error_type, y = freq)) + 
+    geom_point() +
+    facet_wrap(~language, nrow=4, ncol=4) +
+    ggtitle("Error distribution among languages") +
+    labs(x="Error type", y="Error frequency") +
+    theme(axis.text.x = element_text(size=6, angle=90))
+```
+
+
+# Plotting top error types by language
+```{r top_errors_by_language}
+top_errors_by_language <- errors_by_language %>%
+  group_by(language) %>%
+  top_n(2, freq)
+
+top_errors_by_language_distribution <- errors_by_language %>%
+  filter(error_type %in% unique(top_errors_by_language$error_type))
+
+ggplot(top_errors_by_language_distribution, aes(x = language, y = freq)) + 
+    geom_point() +
+    geom_point(data=top_errors_by_language, colour="red") +
+    facet_wrap(~error_type, nrow=3, ncol=3) +
+    ggtitle("Most frequent error types") +
+    labs(x="Language", y="Frequency within language") +
+    theme(plot.title = element_text(size = 12, face = "bold")) +
+    theme(axis.text.x = element_text(size=6, angle=45))
+```
+
+
+# Matrix of error distribution similarity
+```{r distance_matrix, echo=FALSE, results="hide", include=FALSE}
+m <- matrix(0, ncol = 212, nrow = 0)
+distance_df <- data.frame(m)
+names(distance_df) <- c("id", used_languages)
+
+for (l in used_languages) {
+  vector <- c(l)
+  for (l2 in used_languages) {
+    combined_df = rbind(errors_by_language[which(errors_by_language$language==l),]$freq, errors_by_language[which(errors_by_language$language==l2),]$freq)
+    vector <- c(vector, zapsmall(distance(combined_df, method = "euclidean"), digits = 2))
+  }
+  supplemental_data_frame <- data.frame(t(vector));
+  colnames(supplemental_data_frame) <- c("id", used_languages);
+  supplemental_data_frame
+  distance_df<-rbind(distance_df, supplemental_data_frame)
+}
+```
+
+## BIGRAMS
+
+# Plotting wrong part-of-speech bigrams distriution by language
+```{r wrong_bigrams_by_language}
+error_bigrams_by_language <-
+  data %>%
+    group_by(language) %>%
+    count(error_bigram)
+
+error_bigrams_by_language <- error_bigrams_by_language %>%
+  group_by(language) %>%
+  mutate(freq = n / sum(n))
+
+error_bigrams_by_language[which(error_bigrams_by_language$freq>0.025),] %>%
+    ggplot(aes(x = error_bigram, y = freq)) + 
+    geom_point() +
+    facet_wrap(~language, nrow=4, ncol=4) +
+    ggtitle("Error bigram distribution among languages") +
+    labs(x="Error bigram", y="Error frequency") +
+    theme(axis.text.x = element_text(size=6, angle=25))
+
+top_error_bigrams_by_language <- error_bigrams_by_language %>%
+  group_by(language) %>%
+  top_n(3)
+```
+
+# Plotting most frequent corrected part-of-speech bigrams
+```{r top_correct_bigrams}
+correct_bigrams <- data %>%
+    count(correct_bigram) 
+  
+correct_bigrams <-
+    correct_bigrams %>%
+    mutate(freq = n / sum(n))
+
+correct_bigrams$correct_bigram <- factor(correct_bigrams$correct_bigram, levels = correct_bigrams$correct_bigram[order(-correct_bigrams$freq)])
+
+correct_bigrams %>%
+    top_n(5, freq) %>%
+    ggplot(aes(x = correct_bigram, y = freq)) + 
+    ggtitle("Top 5 corrected bigram") +
+    labs(x="Corrected bigram", y="Frequency") +
+    geom_bar(stat = "identity", width = 0.35) +
+    theme(axis.text.x = element_text())
+```
+
+# Plotting corrected part-of-speech bigrams distribution by language
+```{r correct_bigrams_by_language}
+correct_bigrams_by_language <-
+  data %>%
+    group_by(language) %>%
+    count(correct_bigram)
+
+correct_bigrams_by_language <- merge(correct_bigrams_by_language, learners, by="language")
+
+correct_bigrams_by_language <- correct_bigrams_by_language %>%
+  group_by(language) %>%
+  mutate(freq = n.x/n.y)
+
+correct_bigrams_by_language[which(correct_bigrams_by_language$freq>0.25),] %>%
+    ggplot(aes(x = correct_bigram, y = freq)) + 
+    geom_point() +
+    facet_wrap(~language, nrow=4, ncol=4) +
+    ggtitle("Correct bigram distribution among languages") +
+    labs(x="Correct bigram", y="Error frequency") +
+    theme(axis.text.x = element_text(size=6, angle=90))
+```
+
+# Plotting most frequent corrected part-of-speech bigrams by language
+```{r}
+top_correct_bigrams_by_language <- correct_bigrams_by_language %>%
+  group_by(language) %>%
+  top_n(2, freq)
+
+top_correct_bigrams_distribution <- correct_bigrams_by_language %>%
+  filter(correct_bigram %in% unique(top_correct_bigrams_by_language$correct_bigram))
+
+ggplot(top_correct_bigrams_distribution, aes(x = language, y = freq)) + 
+    geom_point() +
+    geom_point(data=top_correct_bigrams_by_language, colour="red") +
+    facet_wrap(~correct_bigram, nrow=3, ncol=3) +
+    ggtitle("Corrected bigrams and their distributions over languages") +
+    labs(x="Language", y="Frequency within language") +
+    theme(plot.title = element_text(size = 12, face = "bold")) +
+    theme(axis.text.x = element_text(size=6, angle=45))
+```
+
+## TRIGRAMS
+
+# Most common wrong part-of-speech trigrams
+```{r error_trigrams}
+trigrams <-
+  data %>%
+    count(error_trigram)
+
+trigrams %>%
+    top_n(5) %>%
+    ggplot(aes(x = error_trigram, y = n)) +
+    geom_point()
+```
+
+# Plotting wrong part-of-speech trigrams distribution by language
+```{r wrong_trigrams_by_language}
+error_trigrams_by_language <-
+  data %>%
+    group_by(language) %>%
+    count(error_trigram)
+
+error_trigrams_by_language <- error_trigrams_by_language %>%
+  group_by(language) %>%
+  mutate(freq = n / sum(n))
+
+top_error_trigrams_by_language <- error_trigrams_by_language %>%
+  group_by(language) %>%
+  top_n(2)
+
+error_trigrams_by_language[which(error_trigrams_by_language$freq>0.01),] %>%
+    ggplot(aes(x = error_trigram, y = freq)) + 
+    geom_point() +
+    facet_wrap(~language, nrow=4, ncol=4) +
+    ggtitle("Error trigram distribution among languages") +
+    labs(x="Error trigram", y="Error frequency") +
+    theme(axis.text.x = element_text(size=6, angle=60))
+```
+
+# Plotting corrected part-of-speech trigrams distribution by language
+```{r correct_trigrams_by_language}
+correct_trigrams_by_language <-
+  data %>%
+    group_by(language) %>%
+    count(correct_trigram) 
+
+correct_trigrams_by_language <- correct_trigrams_by_language %>%
+  group_by(language) %>%
+  mutate(freq = n / sum(n))
+
+correct_trigrams_by_language[which(correct_trigrams_by_language$freq>0.01),] %>%
+    ggplot(aes(x = correct_trigram, y = freq)) + 
+    geom_point() +
+    facet_wrap(~language, nrow=4, ncol=4) +
+    ggtitle("Correct trigram distribution among languages") +
+    labs(x="Correct trigram", y="Error frequency") +
+    theme(axis.text.x = element_text(size=6, angle=90))
+```
+
+# Plotting most frequent corrected part-of-speech trigrams by language
+```{r}
+top_correct_trigrams_by_language <- correct_trigrams_by_language %>%
+  group_by(language) %>%
+  top_n(2)
+
+top_correct_trigrams_distribution <- correct_trigrams_by_language %>%
+  filter(correct_trigram %in% unique(top_correct_trigrams_by_language$correct_trigram))
+
+ggplot(top_correct_trigrams_distribution, aes(x = language, y = freq)) + 
+    geom_point() +
+    geom_point(data=top_correct_trigrams_by_language, colour="red") +
+    facet_wrap(~correct_trigram, nrow=3, ncol=3) +
+    ggtitle("Corrected trigram and their distributions over languages") +
+    labs(x="Language", y="Frequency within language") +
+    theme(plot.title = element_text(size = 12, face = "bold")) +
+    theme(axis.text.x = element_text(size=6, angle=60))
+```
+
+
