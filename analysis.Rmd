@@ -31,7 +31,6 @@ learners <- data %>%
 ```
 
 # Grouping error types
-
 ```{r error_groups}
 errors_frequency <-
   data %>%
@@ -42,7 +41,6 @@ errors_frequency <- errors_frequency %>%
 ```
 
 # Plotting top 5 error types
-
 ```{r error_groups_frequency}
 errors_frequency <- errors_frequency[order(errors_frequency$freq), ]
 errors_frequency$error_type <- factor(errors_frequency$error_type, levels = errors_frequency$error_type[order(-errors_frequency$freq)])
@@ -73,7 +71,7 @@ ggplot(top_errors_by_language_distribution, aes(x = language, y = n)) +
     geom_point() +
     geom_point(data=top_errors_by_language, colour="red") +
     facet_wrap(~error_type, nrow=3, ncol=3) +
-    ggtitle("Corrected trigram and their distributions over languages") +
+    ggtitle("Top error types distribution over languages") +
     labs(x="Language", y="Frequency within language") +
     theme(plot.title = element_text(size = 12, face = "bold")) +
     theme(axis.text.x = element_text(size=6, angle=60))
@@ -95,7 +93,6 @@ errors_by_language[which(errors_by_language$freq>0.035),] %>%
     labs(x="Error type", y="Error frequency") +
     theme(axis.text.x = element_text(size=6, angle=90))
 ```
-
 
 # Plotting top error types by language
 ```{r top_errors_by_language}
