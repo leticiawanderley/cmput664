@@ -51,7 +51,7 @@ def extract_errors(answer):
             if type(node) == etree._Element: # if the node is an error node (<NS></NS>)
               if node == errors[num_errors]: # if it is the error at the position examined
                 error_type = node.attrib['type']
-                error_position = len(line.split()) # recording error position
+                error_position = len(tag_sentence(line)) # recording error position
               for child in list(node): # loop through wrong and corrected utterances
                 if child.tag == 'c' and child.text:
                   correct_sentence += replace_non_alphanumeric(child.text)
@@ -78,10 +78,16 @@ def extract_errors(answer):
               'error_pos': error_pos, 'correct_pos': correct_pos})
   return errors_sentences
 
-def get_pos_ngram(sentence, index, n, error_type=None):
+def tag_sentence(sentence):
+  if sentence.isupper():
+    sentence = sentence.lower()
   blob = TextBlob(sentence)
   blob.parse()
   tags = blob.tags
+  return tags
+
+def get_pos_ngram(sentence, index, n, error_type=None):
+  tags = tag_sentence(sentence)
   pos_tags = ''
   if error_type and 'M' in error_type: # adding a blank tag for 'missing' error types
     n -= 1
@@ -126,7 +132,7 @@ def main():
   print(languages)
 
 def test():
-  test = './fce-released-dataset/dataset/0100_2001_6/doc2968.xml'
+  test = './fce-released-dataset/dataset/0102_2000_6/doc2402.xml'
   data, errors = extract_data(test)
   print(data, errors)
 
