@@ -38,7 +38,7 @@ def extract_errors(answer):
   for p in answer.iter('p'):
     if p.find('NS') != None:
         sentence_element = p
-        nodes = sentence_element.xpath("child::node()")
+        nodes = sentence_element.xpath('child::node()')
         errors = list(sentence_element.iter('NS'))
         num_errors = len(errors)
         while num_errors > 0:
@@ -71,11 +71,17 @@ def extract_errors(answer):
             correct_trigram = get_pos_ngram(correct_sentence, error_position, 3)
             error_pos = get_pos_ngram(line, error_position, 1, error_type)
             correct_pos = get_pos_ngram(correct_sentence, error_position, 1)
+            error_pos_2 = get_pos_ngram(line, error_position + 1, 1)
+            correct_pos_2 = get_pos_ngram(correct_sentence, error_position + 1, 1)
+            error_pos_3 = get_pos_ngram(line, error_position + 2, 1)
+            correct_pos_3 = get_pos_ngram(correct_sentence, error_position + 2, 1)
             errors_sentences.append({'line': line, 'correct_sentence': correct_sentence, 'exam_score': exam_score,
               'error_type': error_type, 'error_position': error_position,
               'error_trigram': error_trigram, 'correct_trigram': correct_trigram,
               'error_bigram': error_bigram, 'correct_bigram': correct_bigram,
-              'error_pos': error_pos, 'correct_pos': correct_pos})
+              'error_pos': error_pos, 'correct_pos': correct_pos,
+              'error_pos_2': error_pos_2, 'correct_pos_2': correct_pos_2,
+              'error_pos_3': error_pos_3, 'correct_pos_3': correct_pos_3})
   return errors_sentences
 
 def tag_sentence(sentence):
@@ -92,14 +98,15 @@ def get_pos_ngram(sentence, index, n, error_type=None):
   if error_type and 'M' in error_type: # adding a blank tag for 'missing' error types
     n -= 1
     pos_tags = '_ '
-  tags.extend([('', '*')] * n)
+  tags.extend([('', '*')] * (n + 2))
   for i in range(index, index + n):
     pos_tags += tags[i][1] + " "
   return pos_tags
 
 def main():
   structure = {'head': [], 'language': [], 'score': [], 'exam_score': [], 'line': [], 'error_position': [], 'error_type': [],
-    'correct_sentence': [], 'error_trigram': [], 'correct_trigram': [], 'error_bigram': [], 'correct_bigram': [], 'error_pos': [], 'correct_pos': []}
+    'correct_sentence': [], 'error_trigram': [], 'correct_trigram': [], 'error_bigram': [], 'correct_bigram': [], 'error_pos': [], 'correct_pos': [],
+    'correct_pos_2': [], 'error_pos_2': [], 'correct_pos_3': [], 'error_pos_3': []}
   languages = {}
   dataset = './fce-released-dataset/dataset/'
   directories = listdir(dataset)
@@ -127,6 +134,10 @@ def main():
           structure['correct_bigram'].append(error['correct_bigram'])
           structure['error_pos'].append(error['error_pos'])
           structure['correct_pos'].append(error['correct_pos'])
+          structure['error_pos_2'].append(error['error_pos_2'])
+          structure['correct_pos_2'].append(error['correct_pos_2'])
+          structure['error_pos_3'].append(error['error_pos_3'])
+          structure['correct_pos_3'].append(error['correct_pos_3'])
   df = pd.DataFrame(data=structure)
   df.to_csv(r'./dataframe.csv')
   print(languages)
