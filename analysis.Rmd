@@ -11,6 +11,7 @@ library("ggplot2")
 library("readr")
 library("reshape2")
 library("philentropy")
+library("randomForest")
 ```
 
 ```{r data_setup, echo=FALSE, results="hide", include=FALSE}
@@ -19,7 +20,6 @@ data = read_csv("./dataframe.csv")
 used_languages = c('Russian', 'Spanish', 'French', 'Turkish', 'German', 'Japanese', 'Polish', 'Italian', 'Catalan', 'Korean', 'Chinese', 'Portuguese', 'Greek', 'Thai', 'Swedish')
 
 data <- data %>%
-  filter(!grepl(error_type, 'S')) %>%
   filter(language %in% used_languages)
 
 learners <- data %>%
@@ -135,7 +135,6 @@ correct_pos_tags_from_top_types_by_language %>%
 ```
 
 ## BIGRAMS
-
 # Plotting wrong part-of-speech bigrams distribution by language
 ```{r wrong_bigrams_by_language}
 error_bigrams_by_language <-
@@ -290,7 +289,7 @@ correct_trigrams_by_language <- correct_trigrams_by_language %>%
 
 correct_trigrams_by_language %>%
     group_by(language) %>%
-    top_n(3) %>%
+    top_n(1) %>%
     ggplot(aes(x = correct_trigram, y = freq)) + 
     geom_point() +
     facet_wrap(~language, nrow=4, ncol=4) +
@@ -336,3 +335,27 @@ for (l in used_languages) {
   distance_df<-rbind(distance_df, supplemental_data_frame)
 }
 ```
+
+
+
+# Comparing the error type rate
+```{r}
+for (l in used_languages) {
+  language <- errors_by_language[which(errors_by_language$language==l),]
+  top_errors <- unique((language %>% filter(freq > 0.75))$error_type)
+  other_languages <- errors_by_language[which(errors_by_language$language!=l),]
+  print(
+    language %>%
+    filter(freq > 0.75) %>%
+    ggplot(aes(x = error_type, y = freq)) + 
+    geom_boxplot(data=(other_languages %>% filter(error_type %in% top_errors)),
+                 aes(x=error_type, y=freq), outlier.colour="red", outlier.size=1) +
+    geom_point() +
+    scale_y_continuous(limits = c(0, 1)) +
+    ggtitle(l) +
+    labs(x="Error type", y="Error frequency") +
+    theme(axis.text.x = element_text(size=6, angle=90)))
+  
+}
+```
+
