@@ -140,7 +140,7 @@ def get_pos_ngram(nlp, sentence, index, n, error_type=None):
   tags, deps = tag_sentence(nlp, sentence)
   pos_tags = ''
   dep_tags = ''
-  if error_type and 'M' in error_type: # adding a blank tag for 'missing' error types
+  if error_type and ('M' in error_type or 'AS' in error_type): # adding a blank tag for 'missing' error types
     n -= 1
     pos_tags = '_ '
     dep_tags = '_ '
