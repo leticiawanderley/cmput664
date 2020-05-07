@@ -15,6 +15,7 @@ CORRECT = 12
 
 PIPE = '|'
 SPACED_PIPE = ' | '
+PIPE_AT_POS_0 = '| '
 EMPTY = ''
 SPACE = ' '
 
@@ -66,7 +67,6 @@ def build_string(first, second, third):
 def tag_sentence(nlp, sentence):
     if sentence.isupper():
         sentence = sentence.lower()
-    sentence = sentence.replace('  |  ', ' | ')
     tokens = []
     tags = []
     deps = []
@@ -77,14 +77,18 @@ def tag_sentence(nlp, sentence):
             if token.text == PIPE:
                 index = i
                 break
-    sentence = sentence.replace(SPACED_PIPE, EMPTY)
+    if index == 0:
+        sentence = sentence.replace(PIPE_AT_POS_0, EMPTY)
+    else:
+        sentence = sentence.replace(SPACED_PIPE, SPACE)
+        index -= 1
     for sent in nlp.pipe([sentence], disable=["ner", "textcat"]):
         for i, token in enumerate(sent):
             tokens.append(token.text)
             tags.append(token.tag_)
             deps.append(token.dep_)
             poss.append(token.pos_)
-    return tags, deps, poss, tokens, index - 1
+    return tags, deps, poss, tokens, index
 
 
 def fill_array(array, length):
@@ -118,13 +122,14 @@ def compare_utterances(data_dict, length):
                 is_the_same = data_dict[correct_value][-1] == \
                     data_dict[incorrect_value][-1]
                 data_dict[str(i) + '_' + str(j) + '_' + type]\
-                .append(is_the_same)
+                    .append(is_the_same)
 
 
 def sentence_formatting(sentence, full_match, replacement):
-    return replace_with_correction(
-            sentence.replace(full_match, replacement))\
-                .replace(PIPE, SPACED_PIPE)
+    sentence = replace_with_correction(
+                  sentence.replace(full_match, replacement))\
+                      .replace(PIPE, SPACED_PIPE)
+    return clean_extra_whitespaces(sentence)
 
 
 def add_common_data(data_dict, common_data, sentence, exam_score):
@@ -221,29 +226,29 @@ def main(test=False):
     number_of_inner = 0
     nlp = spacy.load('en_core_web_lg')
     data_dict = {'student_id': [], 'language': [], 'overall_score': [],
-              'exam_score': [], 'raw_sentence': [], 'error_type': [],
-              'error_length': [], 'correction_length': [],
-              'correct_error_index': [], 'correct_sentence': [],
-              'correct_trigram': [], 'correct_trigram_tags': [],
-              'correct_trigram_deps': [], 'correct_trigram_poss': [],
-              'correct_trigram_tag_0': [], 'correct_trigram_tag_1': [],
-              'correct_trigram_tag_2': [], 'correct_trigram_dep_0': [],
-              'correct_trigram_dep_1': [], 'correct_trigram_dep_2': [],
-              'incorrect_error_index': [], 'incorrect_sentence': [],
-              'incorrect_trigram': [], 'incorrect_trigram_tags': [],
-              'incorrect_trigram_deps': [], 'incorrect_trigram_poss': [],
-              'incorrect_trigram_tag_0': [], 'incorrect_trigram_tag_1': [],
-              'incorrect_trigram_tag_2': [], 'incorrect_trigram_dep_0': [],
-              'incorrect_trigram_dep_1': [], 'incorrect_trigram_dep_2': [],
-              '0_0_tag': [], '0_1_tag': [], '0_2_tag': [],
-              '1_0_tag': [], '1_1_tag': [], '1_2_tag': [],
-              '2_0_tag': [], '2_1_tag': [], '2_2_tag': [],
-              '0_0_dep': [], '0_1_dep': [], '0_2_dep': [],
-              '1_0_dep': [], '1_1_dep': [], '1_2_dep': [],
-              '2_0_dep': [], '2_1_dep': [], '2_2_dep': []}
+                 'exam_score': [], 'raw_sentence': [], 'error_type': [],
+                 'error_length': [], 'correction_length': [],
+                 'correct_error_index': [], 'correct_sentence': [],
+                 'correct_trigram': [], 'correct_trigram_tags': [],
+                 'correct_trigram_deps': [], 'correct_trigram_poss': [],
+                 'correct_trigram_tag_0': [], 'correct_trigram_tag_1': [],
+                 'correct_trigram_tag_2': [], 'correct_trigram_dep_0': [],
+                 'correct_trigram_dep_1': [], 'correct_trigram_dep_2': [],
+                 'incorrect_error_index': [], 'incorrect_sentence': [],
+                 'incorrect_trigram': [], 'incorrect_trigram_tags': [],
+                 'incorrect_trigram_deps': [], 'incorrect_trigram_poss': [],
+                 'incorrect_trigram_tag_0': [], 'incorrect_trigram_tag_1': [],
+                 'incorrect_trigram_tag_2': [], 'incorrect_trigram_dep_0': [],
+                 'incorrect_trigram_dep_1': [], 'incorrect_trigram_dep_2': [],
+                 '0_0_tag': [], '0_1_tag': [], '0_2_tag': [],
+                 '1_0_tag': [], '1_1_tag': [], '1_2_tag': [],
+                 '2_0_tag': [], '2_1_tag': [], '2_2_tag': [],
+                 '0_0_dep': [], '0_1_dep': [], '0_2_dep': [],
+                 '1_0_dep': [], '1_1_dep': [], '1_2_dep': [],
+                 '2_0_dep': [], '2_1_dep': [], '2_2_dep': []}
 
     if test:
-        test = './fce-released-dataset/dataset/0100_2000_6/doc971.xml'
+        test = './fce-released-dataset/dataset/0102_2000_6/doc433.xml'
         a, b, c = get_errors(test, data_dict, nlp)
         total_errors += a
         wrong += b
