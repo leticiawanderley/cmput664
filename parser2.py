@@ -81,7 +81,6 @@ def tag_sentence(nlp, sentence):
         sentence = sentence.replace(PIPE_AT_POS_0, EMPTY)
     else:
         sentence = sentence.replace(SPACED_PIPE, SPACE)
-        index -= 1
     for sent in nlp.pipe([sentence], disable=["ner", "textcat"]):
         for i, token in enumerate(sent):
             tokens.append(token.text)
