@@ -1,20 +1,22 @@
 ## Parser 2 output description
 
 Each line in this dataset represents an annotated learner error.
-Paragraph line in the essay XML file can contain more than one annotated error.
+One paragraph line in the essay XML file can contain more than one annotated error.
 
 | Column        | Type   | Description  |
-| ------------- |:------:|-------------:|
+| ------------- |:------:|-------------|
 | student_id    | String | Test take identification |
 | language      | String | Learner's L1    |
 | overall_score | Float | Combined mark for both tasks     |
 | exam_score    | String | Essay mark |
-| raw_sentence  | String | Line extracted from the XML file      |
+| raw_sentence  | String | Paragraph line extracted from the XML file      |
 | error_type    | String | Tag associated with the error (See [Nicholls 2003](http://ucrel.lancs.ac.uk/publications/CL2003/papers/nicholls.pdf))    |
 | error_length    | Integer | How many words are tagged in the error |
 | correction_length      | Integer | How many words are tagged in the correction      |
-| correct_error_index | Integer | Index of the correction in the sentence     |
 | correct_sentence    | String | Sentence with all the errors replaced by their corrections |
+| correct_error_index | Integer | Index of the correction in the sentence     |
+| incorrect_sentence | String | Sentence with all the errors replaced by their corrections, **but the error represented by the row**      |
+| incorrect_error_index      | Integer | Index of the error in the sentence        |
 | correct_trigram      | List of strings | Sequence of tree words that begins at the correction index       |
 | correct_trigram_tags | List of strings |Part-of-speech tags corresponding to the correction sequence       |
 | correct_trigram_deps    | List of strings |Dependency tags corresponding to the correction sequence  |
@@ -25,8 +27,6 @@ Paragraph line in the essay XML file can contain more than one annotated error.
 | correct_trigram_dep_0      | String | Dependency tag corresponding to the first word in the correction       |
 | correct_trigram_dep_1 | String | Dependency tag corresponding to the second word in the correction      |
 | correct_trigram_dep_2    | String |Dependency tag corresponding to the third word in the correction |
-| incorrect_error_index      | Integer | Index of the error in the sentence        |
-| incorrect_sentence | String | Sentence with all the errors replaced by their corrections, **but the error represented by the row**      |
 | incorrect_trigram    | List of strings | Sequence of tree words that begins at the error index |
 | incorrect_trigram_tags      | List of strings | Part-of-speech tags corresponding to the error sequence      |
 | incorrect_trigram_deps | List of strings | Dependency tags corresponding to the error sequence       |
