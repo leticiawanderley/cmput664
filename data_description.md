@@ -5,7 +5,7 @@ One paragraph line in the essay XML file can contain more than one annotated err
 
 | Column        | Type   | Description  |
 | ------------- |:------:|-------------|
-| student_id    | String | Test take identification |
+| student_id    | String | Test taker identification |
 | language      | String | Learner's L1    |
 | overall_score | Float | Combined mark for both tasks     |
 | exam_score    | String | Essay mark |
