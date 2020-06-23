@@ -104,8 +104,8 @@ def set_tags_and_deps(nlp, sentence, data_dict, affix, length):
     trigram_deps = fill_array(deps[error_index: error_index + length], length)
     trigram_poss = fill_array(poss[error_index: error_index + length], length)
     data_dict[affix + '_trigram'].append(trigram)
-    data_dict[affix + '_trigram_tags'].append(trigram_tags)
-    data_dict[affix + '_trigram_deps'].append(trigram_deps)
+    data_dict[affix + '_trigram_tags'].append(" ".join(trigram_tags))
+    data_dict[affix + '_trigram_deps'].append(" ".join(trigram_deps))
     data_dict[affix + '_trigram_poss'].append(" ".join(trigram_poss))
     for i in range(length):
         data_dict[affix + '_trigram_tag_' + str(i)].append(trigram_tags[i])
