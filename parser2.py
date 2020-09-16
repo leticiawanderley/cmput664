@@ -41,7 +41,7 @@ def clean_extra_whitespaces(sentence):
 def replace_with_correction(sentence):
     errors_match = re.findall(full_inner_error_re, sentence, re.MULTILINE)
     for e in errors_match:
-        sentence = sentence.replace(e[FULL_MATCH], e[CORRECT]if e[CORRECT]
+        sentence = sentence.replace(e[FULL_MATCH], e[CORRECT] if e[CORRECT]
                                     else EMPTY)
     sentence = re.sub(wrong_error_coding_re, SPACE, sentence)
     return clean_extra_whitespaces(sentence)
@@ -247,7 +247,7 @@ def main(test=False):
                  '2_0_dep': [], '2_1_dep': [], '2_2_dep': []}
 
     if test:
-        test = './fce-released-dataset/dataset/0102_2000_6/doc433.xml'
+        test = './fce-released-dataset/dataset/0102_2000_12/doc605.xml'
         a, b, c = get_errors(test, data_dict, nlp)
         total_errors += a
         wrong += b
