@@ -21,7 +21,7 @@ SPACE = ' '
 
 exam_score_re = r'(?<=<exam_score>)(.*?)(?=<\/exam_score>)'
 sentence_re = r'(?<=<p>)(.*?)(?=<\/p>)'  # retrieves sentence between <p></p>
-full_inner_error_re = r"(<NS type=\"([A-Z]+)\">(<i>([\w\s']*)(<NS type=\"([A-Z]+)\">(<i>(.*?)<\/i>)*(<c>(.*?)<\/c>)*<\/NS>([\w\s']*))*<\/i>)*(<c>(.*?)<\/c>)*<\/NS>)"
+full_inner_error_re = r"(<NS type=\"([A-Z]+)\">(<i>([\w\s'\.\,\?\!\:\;]*)(<NS type=\"([A-Z]+)\">(<i>(.*?)<\/i>)*(<c>(.*?)<\/c>)*<\/NS>([\w\s'\.\,\?\!\:\;]*))*<\/i>)*(<c>(.*?)<\/c>)*<\/NS>)"
 error_type_re = r'(<NS type=\"([A-Z]+)\">)'
 wrong_error_coding_re = r'(<NS type=\"[A-Z]+\">|<\/NS>|<\/*[a-z]+>)'
 
