@@ -273,4 +273,4 @@ def main(test=False):
     df.to_csv('main_parser2.csv')
 
 
-main(test=True)
+main(test=False)
