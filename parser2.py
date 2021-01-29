@@ -25,6 +25,8 @@ full_inner_error_re = r"(<NS type=\"([A-Z]+)\">(<i>([\w\s\'\,\.\:\;\-\"\?\!\(\)\
 error_type_re = r'(<NS type=\"([A-Z]+)\">)'
 wrong_error_coding_re = r'(<NS type=\"[A-Z]+\">|<\/NS>|<\/*[a-z]+>)'
 
+unsure_error_coding_re = r'(<NS type=\"([A-Z]+)\">([\w\s\'\,\.\:\;\-\"\?\!\(\)\=\_\%\£\$\\&\/]*)<\/NS>)'
+
 
 def combine_filename(dataset, directory, file):
     return dataset + directory + '/' + file
@@ -159,7 +161,7 @@ def add_sentences(data_dict, sentence, error, error_type_index,
     return True
 
 
-def get_errors(filename, data_dict, nlp):
+def get_errors(filename, data_dict, nlp, unsure_data_dict):
     regex_dict = {
         'student_id': r'(?<=sortkey=\")(.*?)(?=\">)',
         'language': r'(?<=<language>)(.*?)(?=<\/language>)',
@@ -174,7 +176,7 @@ def get_errors(filename, data_dict, nlp):
     number_of_inner = 0
     for line in lines:
         if data_count < len(regex_dict):
-            for data in regex_dict.keys():
+            for data in regex_dict:
                 match = re.search(regex_dict[data], line, re.MULTILINE)
                 if match:
                     common_data[data] = match.groups()[FULL_MATCH]
@@ -216,7 +218,22 @@ def get_errors(filename, data_dict, nlp):
                                     current_exam_score)
                 else:
                     number_of_wrong += 1
+            capture_unsure_errors(unsure_data_dict, sentence, nlp, common_data, current_exam_score)
     return number_of_errors, number_of_wrong, number_of_inner
+
+
+def capture_unsure_errors(data_dict, sentence, nlp, common_data,
+                          current_exam_score):
+    errors = re.findall(unsure_error_coding_re, sentence)
+    for error in errors:
+        incorrect = mark_utterance(string_or_empty(error[2]))
+        correct = mark_utterance(string_or_empty(''))
+        is_correct_format = add_sentences(data_dict, sentence, error,
+                                          ERROR_TYPE, FULL_MATCH,
+                                          incorrect, correct, nlp)
+        if is_correct_format:
+            add_common_data(data_dict, common_data, sentence,
+                            current_exam_score)
 
 
 def main(test=False):
@@ -245,15 +262,40 @@ def main(test=False):
                  '0_0_dep': [], '0_1_dep': [], '0_2_dep': [],
                  '1_0_dep': [], '1_1_dep': [], '1_2_dep': [],
                  '2_0_dep': [], '2_1_dep': [], '2_2_dep': []}
+    unsure_data_dict = {
+        'student_id': [], 'language': [], 'overall_score': [],
+        'exam_score': [], 'raw_sentence': [], 'error_type': [],
+        'error_length': [], 'correction_length': [],
+        'correct_error_index': [], 'correct_sentence': [],
+        'correct_trigram': [], 'correct_trigram_tags': [],
+        'correct_trigram_deps': [], 'correct_trigram_poss': [],
+        'correct_trigram_tag_0': [], 'correct_trigram_tag_1': [],
+        'correct_trigram_tag_2': [], 'correct_trigram_dep_0': [],
+        'correct_trigram_dep_1': [], 'correct_trigram_dep_2': [],
+        'incorrect_error_index': [], 'incorrect_sentence': [],
+        'incorrect_trigram': [], 'incorrect_trigram_tags': [],
+        'incorrect_trigram_deps': [], 'incorrect_trigram_poss': [],
+        'incorrect_trigram_tag_0': [], 'incorrect_trigram_tag_1': [],
+        'incorrect_trigram_tag_2': [], 'incorrect_trigram_dep_0': [],
+        'incorrect_trigram_dep_1': [], 'incorrect_trigram_dep_2': [],
+        '0_0_tag': [], '0_1_tag': [], '0_2_tag': [],
+        '1_0_tag': [], '1_1_tag': [], '1_2_tag': [],
+        '2_0_tag': [], '2_1_tag': [], '2_2_tag': [],
+        '0_0_dep': [], '0_1_dep': [], '0_2_dep': [],
+        '1_0_dep': [], '1_1_dep': [], '1_2_dep': [],
+        '2_0_dep': [], '2_1_dep': [], '2_2_dep': []}
 
     if test:
-        test = './fce-released-dataset/dataset/0102_2000_12/doc605.xml'
-        a, b, c = get_errors(test, data_dict, nlp)
+        test = './fce-released-dataset/dataset/0100_2000_12/doc2102.xml'
+        a, b, c = get_errors(test, data_dict, nlp, unsure_data_dict)
         total_errors += a
         wrong += b
         number_of_inner += c
-        df = pd.DataFrame.from_dict(data_dict)
-        df.to_csv('test_parser2.csv')
+        #df = pd.DataFrame.from_dict(data_dict)
+        #df.to_csv('test_parser2.csv')
+
+        df2 = pd.DataFrame.from_dict(unsure_data_dict)
+        df2.to_csv('unsure_parser2.csv')
     else:
         dataset = './fce-released-dataset/dataset/'
         directories = listdir(dataset)
@@ -262,15 +304,18 @@ def main(test=False):
                 files = listdir(dataset + directory)
                 for file in files:
                     filename = combine_filename(dataset, directory, file)
-                    a, b, c = get_errors(filename, data_dict, nlp)
+                    a, b, c = get_errors(filename, data_dict, nlp,
+                                         unsure_data_dict)
                     total_errors += a
                     wrong += b
                     number_of_inner += c
-    df = pd.DataFrame.from_dict(data_dict)
+    #df = pd.DataFrame.from_dict(data_dict)
     print('TOTAL ERRORS', total_errors)
     print('WRONG FORMAT', wrong)
     print('TOTAL INNER', number_of_inner)
-    df.to_csv('main_parser2.csv')
+    #df.to_csv('main_parser2.csv')
+    df2 = pd.DataFrame.from_dict(unsure_data_dict)
+    df2.to_csv('unsure_parser2.csv')
 
 
 main(test=False)
